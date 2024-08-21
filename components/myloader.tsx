@@ -6,7 +6,7 @@ import { IconSquareRoundedX } from "@tabler/icons-react";
 
 
 export function MultiStepLoaderDemo({ loading, handleButtonClick, selectedCity }: any) {
-    
+
     const loadingStates = [
         {
             text: "Getting your current location from your device.",
@@ -18,7 +18,7 @@ export function MultiStepLoaderDemo({ loading, handleButtonClick, selectedCity }
             text: "Coordinates are passed to the GoogleMaps API to retrieve city",
         },
         {
-            text: `Obtaining the current weather information ${selectedCity}.`,
+            text: `Obtaining the current weather information for ${selectedCity}.`,
         },
         {
             text: "Done",

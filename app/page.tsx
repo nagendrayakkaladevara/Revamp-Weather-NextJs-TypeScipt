@@ -1,4 +1,5 @@
 'use client';
+import { CardSpotlightDemo } from "@/components/CardSpotlightDemo";
 import { HeroHighlightDemo } from "@/components/hero";
 import { MultiStepLoaderDemo } from "@/components/myloader";
 import { Spotlight } from "@/components/Spotlight";
@@ -10,8 +11,9 @@ export default function Home() {
 
   const [selectedCity, setSelectedCity] = useState<string | null>(null);
   const [weather, setWeather] = useState<any>(null);
-  console.log("🚀 ~ Home ~ weather:", weather)
   const [loading, setLoading] = useState<boolean>(false);
+  const [showWeather, setShowWeather] = useState<boolean>(false);
+  const [locationData, setLocationData] = useState<any>([])
 
   const handleButtonClick = () => {
     setLoading(true);
@@ -79,10 +81,11 @@ export default function Home() {
       if (!response.ok) throw new Error('Failed to reverse GeoCode location');
 
       const data = await response.json();
+      setLocationData(data);
       const city = extractCityFromGeocoderResult(data.results[0]);
       if (city) {
         setSelectedCity(city);
-        fetchWeather(city);  // Fetch weather data after the city is retrieved
+        fetchWeather(city);
       } else {
         setLoading(false);
       }
@@ -106,6 +109,7 @@ export default function Home() {
     const apiKey = process.env.NEXT_PUBLIC_API_KEY_openweathermap;
     if (!apiKey) {
       console.error('OpenWeatherMap API key is missing');
+      toast.error('OpenWeatherMap API key is missing.');
       setLoading(false);
       return;
     }
@@ -118,10 +122,20 @@ export default function Home() {
 
       const weatherData = await response.json();
       setWeather(weatherData);
+
+      // Wait for either 9 seconds or until fetching is done, whichever is longer
+      await Promise.all([
+        new Promise((resolve) => setTimeout(resolve, 8000)), // 9-second delay
+        response.ok ? Promise.resolve() : Promise.reject('Error fetching weather data'),
+      ]);
+
+      setShowWeather(true);
+
     } catch (error) {
       console.error('Error fetching weather data:', error);
+      toast.error('Error fetching weather data.');
     } finally {
-      // setLoading(false);
+      setLoading(false);
     }
   };
 
@@ -132,12 +146,17 @@ export default function Home() {
           className="-top-40 left-0 md:left-60 md:-top-20"
           fill="white"
         />
-        <div className="flex flex-col items-center justify-center">
-          <HeroHighlightDemo />
+        {showWeather ? (<>
+          <div className="flex flex-col items-center justify-center">
+            <CardSpotlightDemo weather={weather} locationData={locationData} />
+          </div>
+        </>) : (<>
+          <div className="flex flex-col items-center justify-center">
+            <HeroHighlightDemo />
+            <MultiStepLoaderDemo loading={loading} handleButtonClick={handleButtonClick} selectedCity={selectedCity} />
+          </div>
+        </>)}
 
-
-          <MultiStepLoaderDemo loading={loading} handleButtonClick={handleButtonClick} selectedCity={selectedCity} />
-        </div>
         <ToastContainer />
       </div>
     </>
